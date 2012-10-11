@@ -11,6 +11,7 @@ from attest import Tests, assert_hook, raises
 from wand.version import MAGICK_VERSION_INFO
 from wand.image import ClosedImageError, Image
 from wand.color import Color
+from wand.sequence import Sequence
 
 
 def get_sig_version(versions):
@@ -831,3 +832,33 @@ def metadata():
         assert 'exif:UnknownValue' not in img.metadata
         assert img.metadata['exif:ApertureValue'] == '192/32'
         assert img.metadata.get('exif:UnknownValue', "IDK") == "IDK"
+
+
+
+@tests.test
+def test_sequence_api_01():
+    with Image(filename=asset('apple.ico')) as img:
+        assert img.has_sequence()
+
+        seq = Sequence(img)
+        assert len(seq) == 4
+        assert seq[1].size == (16, 16)
+
+        with raises(ValueError):
+            tmp = seq[40]
+
+@tests.test
+def test_sequence_api_02():
+    with Image(filename=asset('mona-lisa.jpg')) as img:
+        assert not img.has_sequence()
+
+        with raises(ValueError):
+            seq = Sequence(img)
+
+@tests.test
+def test_sequence_append():
+    with Image(filename=asset('apple.ico')) as img1:
+        with Image(filename=asset('google.ico')) as img2:
+            seq1 = Sequence(img1)
+            seq1.append(img2)
+            assert len(seq1) == 5
